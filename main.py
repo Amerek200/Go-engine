@@ -44,6 +44,7 @@ class Engine():
     #moves = list of stone objects
     self.moves = []
     self.board = [[None for x in range(board_size)] for x in range(board_size)]
+    self.board_size = board_size
     #19x19 list of None, filled with stone objects/move reference to object
 
   def play(self):
@@ -72,24 +73,23 @@ class Engine():
       i += 1 
       
 
-
-    pass
-
   def solve_placement(self, stone):
     """
     Iterates over neighbors of given stone and either updates group attribute or checks if group is dead.
     """
-    neighbors = stone.get_neighbors()
+    neighbors = stone.get_neighbors(self.board_size)
     color = stone.black
     for n in neighbors:
       n_id = self.board[n[0]][n[1]]
+      #could you if (if None oder if isstance) or try-except to 
+      if n_id == None:
+        continue
       n_obj = self.moves[n_id]
-      if n_obj.color == color:
-        update_group(stone, n_obj)
+      if n_obj.black == color:
+        self.update_group(stone, n_obj)
       else: #must me opposite color
-        check_liberties(n_obj)
-
-    pass
+         if self.check_liberties(n_obj) == False:
+           self.delete(n_obj)
 
   def check_liberties(self, stone):
     #get list of possible liberties, then check if at least one is emtpy.
@@ -105,10 +105,18 @@ class Engine():
   def update_group(self, new_stone, old_stone):
     #unite sets = adds new stone to group without creating dublicates
     new_stone.group.update(old_stone.group)
-    old_stone.group = new_stone.group
+    for s_id in new_stone.group:
+      self.moves[s_id].group.update(new_stone.group)
 
-  def delete(self):
-    pass
+  def delete(self, stone):
+    """
+    sets captured = True for every stone in the group and clears them from .board.
+    """
+    for s_id in stone.group:
+      s_obj = self.moves[s_id]
+      s_obj.captured = True
+      x, y = s_obj.coords
+      self.board[x][y] = None 
 
   def check_placement(self):
     pass
@@ -119,18 +127,18 @@ class Engine():
   #due to calling get_neighbor of different stones this has to be a method of Engine() and not Stone()
   def get_group_borders(self, stone): 
     """
-    Returns set containing possible liberties (coord tuple) of the group.
+    Returns set containing possible liberties (coords) of the group.
     """
     #set does automaically ignore the addition of dublicates, yay
     border = set()
-    for s_coords in stone.group:
-      x, y = s_coords
-      s_obj = self.board[x][y]
-      border.update(s_obj.get_neighbors())
+    
+    for s_id in stone.group:
+      s_obj = self.moves[s_id]
+      x, y = s_obj.coords
+      neighbors = s_obj.get_neighbors(self.board_size)
+      border.update(neighbors)
 
     return border
-
-  
 
 class placementException(Exception):
   pass
@@ -142,38 +150,45 @@ class Stone():
     self.black = color
     #id = move number
     self.id = id
-    #set of coords belonging to a group, set makes update easier
+    #set of id's belonging to a group, set makes update easier
     self.group = {id, }
     self.captured = False
     #decorate coords with @property for getter and setter?
     self._coords = tuple()
     self.passed = False
 
-  def get_neigbors(self, board_size):
+  def get_neighbors(self, board_size):
     """
     Returns neighboring coordinates.
     """
     x, y = self.coords
-    adja = list(product([x+1, x-1], [y+1, y-1]))
-    adja = [pos for pos in adja if (0 <= pos[0] < board_size) and (0 <= pos[1] < board_size)]
-    return adja
+    #for generating neighor coords product (like I used for the chess think) doest not make sense, can't think of a better way then hard-coding it.
+    adja = [(x-1, y), (x+1, y), (x, y-1), (x, y+1)]
+    #maybe I can use all() instead of the double comparison?
+    return [pos for pos in adja if (0 <= pos[0] < board_size) and (0 <= pos[1] < board_size)]
+    
 
   @property # this is the getter
   def coords(self):
     return self._coords
 
-  @coords.setter
-  def coords(self, coord, board): 
+  #setters can only accepts one argument arg_tuple = (coord_tuple, board)
+  @coords.setter 
+  def coords(self, arg_tuple): 
     """
     Tests if a stone can be placed, return exception if not.
     
     """
+    coord, board = arg_tuple
     x, y = coord
-    if board[x][y] != None:
+    try:
+      if board[x][y] != None:
+        raise placementException
+      else:
+        self._coords = (x, y)
+        return True
+    except IndexError: #x or y is out of board range -> coord does not exist
       raise placementException
-    else:
-      self._coords = (x, y)
-      return True
 
   #makes object iterable, allowing me to use next(stone) to get T/F for next stone
   def __next__(self):
