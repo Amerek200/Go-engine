@@ -1,43 +1,11 @@
-#Go engine, should be able to:
-#place stones on the board
-#only allow legal moves
-#remove captured stones 
-#keep track of point/captured stones
-#Logging / histroy of the different moves
-#maybe support different board sizes
-#Groundwork to use for GUI / pygame / CLI
-#maybe work with @property decorator
-#https://www.freecodecamp.org/news/python-property-decorator/
-
-#notation: corrdinates from (1, 1) to (19, 19) where (column, row) starting 
-#with top left being (1, 1)
-
-#Classes: 
-#Board, 
-#attribute board = 19x19grid
-#method state returning current board and points
-#method history returning list of tuples corresponding to the moves -> allows method like go_back or go_to_move
-#method place(color, position)
-
-#Stone?
-#each stone is a seperate object name = move number 
-#attibute: black/white
-#maybe stone attributes = id/move , position_tuple, color.
-#maybe give each stone a board group to remember / add other stones faster?
-#this would also greatly increase the space needed compared to storing groups 
-#in the board object.  
-
-#Engine
-#iterate between turn black and turn white
-#https://nedbatchelder.com/blog/201112/keep_data_out_of_your_variable_names.html
-#do not name the objects by name but instead make a list of of moves and append a stone object for every move,
-#still letting me access every move via move[nr]
-#stop iteratring when both players pass   
+#TODO: end game, let user input coords of dead stones -> remove group
+#TODO: counting after dead stones are removed
+#TODO: add input checker at remove
+#TODO: implements inputs in a way that allows/recognizes different players
+#DONE: fix while at the beginning, IndexError
 
 import os
-from itertools import product
 import pytest
-
 
 class Engine():
   def __init__(self, board_size):
@@ -45,22 +13,33 @@ class Engine():
     self.moves = []
     self.board = [[None for x in range(board_size)] for x in range(board_size)]
     self.board_size = board_size
-    #19x19 list of None, filled with stone objects/move reference to object
+
+  def both_passed(self, current):
+    try:
+      return self.moves[current-1].passed and self.moves[current-2].passed
+    except ValueError: #first two moves raise value error
+      continue
+     
 
   def play(self):
     i = 0 #start moves at 0
-    while not (moves[-1].passed and moves[-2].passed):
+    while not self.both_passed(i):
       try: 
-        color = next(moves[i-1])  
+        color = next(self.moves[i-1])  
       except IndexError: #if i-1 does not exist (start of the game) set color to black/true
         color = True 
-      moves[i] = Stone(color, i)
+      self.moves[i] = Stone(color, i)
       
-      while moves[i].coords == ():
-        pos = input(f"Move Nr.: {i + 1}, enter as x,y (without space)")
-        x, y = pos
+      while self.moves[i].coords == ():
+        pos = input(f"Move Nr.: {i + 1}, enter as x,y (without space) or pass.")
+        #check for pass, either try except or if/continue
+        if pos == "pass":
+          self.moves[i].passed = True
+          i =+ 1
+          continue
+
         try: 
-          moves[i].coords = ((x, y), self.board)
+          self.moves[i].coords = ((x, y), self.board)
           self.board[x][y] = i
         except placementException:
           print("Already a stone in place")
@@ -68,9 +47,17 @@ class Engine():
       #now solve placement, check for each neighbor if same color or not,
       #update group if same, check liberties if not.
       solve_placement(moves[i])
+      i += 1
+    #both players passed, counting and removing
+    remove = input("Select dead groups by entering a single coordinate per group")
+    #input check TODO
+    remove = remove.split(",")
+    #trigger delete (requires stone object as argument)
+    for coord in remove:
+      x, y = coord
+      rm_id = self.board[x][y]
+      self.delete(self.moves[rm_id])
 
-
-      i += 1 
       
 
   def solve_placement(self, stone):
@@ -117,9 +104,6 @@ class Engine():
       s_obj.captured = True
       x, y = s_obj.coords
       self.board[x][y] = None 
-
-  def check_placement(self):
-    pass
 
   def print_board(self):
     pass
@@ -168,10 +152,10 @@ class Stone():
     return [pos for pos in adja if (0 <= pos[0] < board_size) and (0 <= pos[1] < board_size)]
     
 
-  @property # this is the getter
+  @property
   def coords(self):
     return self._coords
-
+  
   #setters can only accepts one argument arg_tuple = (coord_tuple, board)
   @coords.setter 
   def coords(self, arg_tuple): 
@@ -199,35 +183,6 @@ class Stone():
 
 
 
-
-  #def check_liberty(self): #does not work as method of Stone since I need to get the other Stone objects.
-  #  """
-  #  Gets called when checking the neighbors of a just placed stone in when neighbor = #opponent.
-  #  Checks for the group the stone belongs to if there is at least one liberty.
-  #  Returns true as soon as liberty if found.
-  #  """
-  
-#class Board():
-#  def __init__(self, size):
-#    self.board = [[None for x in range(size)] for x in range(size)]
-#
-#  def check_liberty(self, coords):
-#    """
-#    Checks for given coords if the stone / group has at least one liberty left.
-#    Returns True/False.
-#    """
-#    for stone_id in self.group:
-#    
-#      adjacent = stone_id.get_neighbors()
-#      for neighbor in adjacent:
-#        x, y = neighbor
-#        if self.board[x][y] == None:
-#        #emtpy field = liberty found!
-#          return True
-#    #no emtpy adjacent point found while iterating over groups neighbors
-#    return False#
-#
-#    pass
   
 
 #e = Engine()
@@ -241,15 +196,6 @@ class Stone():
 #  print(e.moves[i].id)
 #  pos = input(f"Move Nr.: {i}, enter as x,y (without space)")
 #  pos = pos.split(",")
-
-#  try:
-#    e.moves[i].coords = (int(pos[0]), int(pos[1]))
-#    e.board[int(pos[0])][int(pos[1])] = i
-#  except placementException:
-#    print("it worked")
-#    break
-    
-  
 
   #print(type(e.moves[i].coords))
 
