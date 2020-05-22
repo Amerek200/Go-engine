@@ -1,5 +1,6 @@
 import pytest
 from main import *
+from helpers import *
 
 e = Engine(9)
 
@@ -32,13 +33,13 @@ e.board[0][5] = 6 #black
 e.solve_placement(e.moves[6])
 e.moves[7].coords = ((2, 5), e.board)
 e.board[2][5] = 7 #white
-e.solve_placement(e.moves[7]) 
+e.solve_placement(e.moves[7])
 e.moves[8].coords = ((1, 4), e.board)
 e.board[1][4] = 8 #black
 e.solve_placement(e.moves[8])
 e.moves[9].coords = ((2, 6), e.board)
 e.board[2][6] = 9 #white
-e.solve_placement(e.moves[9]) 
+e.solve_placement(e.moves[9])
 e.moves[10].coords = ((1, 6), e.board)
 e.board[1][6] = 10 #black
 e.solve_placement(e.moves[10])
@@ -50,7 +51,7 @@ e.board[0][6] = 12 #black
 e.solve_placement(e.moves[12])
 e.moves[13].coords = ((3, 5), e.board)
 e.board[3][5] = 13 #white
-e.solve_placement(e.moves[13]) 
+e.solve_placement(e.moves[13])
 e.moves[14].coords = ((0, 3), e.board)
 e.board[0][3] = 14 #black
 e.solve_placement(e.moves[14])
@@ -64,12 +65,14 @@ e.solve_placement(e.moves[16])
 
 def test_stone():
   assert e.moves[1].group == {1}
-  
+
 def test_placement():
   with pytest.raises(placementException): #already a stone there
     e.moves[2].coords = (((1, 0), e.board))
-  with pytest.raises(placementException): #coord does not exist
-    e.moves[3].coords = ((200, -4), e.board)
+
+#not needed anymore, inputs get validated.
+  #with pytest.raises(placementException): #coord does not exist
+#    e.moves[3].coords = ((200, -4), e.board)
 
 def test_liberty_check():
   assert e.check_liberties(e.moves[1]) == True
