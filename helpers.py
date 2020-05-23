@@ -35,3 +35,20 @@ def convert_for_printing(x):
         return "{:^3}".format("B")
     else:
         return "{:^3}".format("W")
+
+def print_board(board_size, board, moves):
+    for i in range(board_size):
+        print_row(i, board, moves)
+        if i < board_size - 1:
+            print(" |   " * board_size)
+
+def print_row(i, board, moves):
+    """
+    prints row i
+    """
+    row = [column[i] for column in board]
+    for i in range(len(row)):
+        if row[i] != None:
+            row[i] = moves[row[i]].black
+    row = [convert_for_printing(x) for x in row]
+    print("--".join(row))
