@@ -1,0 +1,25 @@
+#boardSize {
+    width: 150px;
+}
+
+#komi {
+    width: 150px;
+}
+
+#white {
+    float: right;
+}
+
+#score_p {
+    width: 500px;
+}
+
+#btn_div {
+    width: 500px;
+    display: flex;
+    justify-content: center;
+}
+
+#pass_button {
+    width: 40%;
+}
