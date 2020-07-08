@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block title %}
+A Game of Go
+{% endblock %}
+
+{% block body %}
+<h2 id="move_header">Move Nr.: <span id="move_nr">1</span>, <span id="curr_color">Black</span></h2>
+<canvas id="game" width="500" height="500" style="border: 1px solid black"></canvas>
+<p id="score_p">Captures Black: <span id="cap_black">0</span>
+<span id="white">Captures White: <span id="cap_white">0</span> + <span id="komi">6,5</span> Komi </p></span>
+
+<div id="btn_div">
+<button type="button" class="btn btn-primary" id="pass_button">Pass</button>
+</div>
+<script src={{ url_for('static', filename='script.js') }}></script>
+
+{% endblock %}
+{% block script %}
+
+{% endblock %}
