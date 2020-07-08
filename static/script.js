@@ -146,7 +146,6 @@ function update_captures(black, white) {
 
 function update_header(move, color, rem) {
     if (rem == true) {
-        console.log("entering rem = true loop")
         document.getElementById("move_header").innerHTML = "<h3>Click on dead stones to remove the group. <br> Click Pass to continue to counting.</h3>";
     } else {
         move_nr.innerHTML = move;
